@@ -1,0 +1,3 @@
+# misc-mediawiki-tools
+
+A collection of scripts/tools/crap that I've written to do stuff with MediaWiki (though probably more geared towards Wikimedia's deployment of MW) — use at your own risk, even *I* don't remember what works...
