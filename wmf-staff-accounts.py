@@ -109,9 +109,9 @@ def modify_user_page(user, page_content):
         print("Diff:")
         sys.stdout.writelines(diff)
         print("\n----\n")
-
-    print(f"Sleeping for {DELAY} seconds...")
-    time.sleep(DELAY)
+    if DRY is False:
+        print(f"Sleeping for {DELAY} seconds...")
+        time.sleep(DELAY)
     return new_content
 
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
             print("Cache file is less than 12 hours old — OK to use.")
     else:
         print("No cache file found — will create one.")
-
+    print("Checking staff accounts, please wait...")
     print("")
 
     for user in staff_accounts:

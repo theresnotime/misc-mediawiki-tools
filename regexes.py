@@ -1,7 +1,7 @@
 import re
 
 userRegex = re.compile(r"\/.*")
-commentRegex = re.compile(r"no longer works? .*?(WMF|Wikimedia|here)", re.IGNORECASE)
+commentRegex = re.compile(r"no longer works? .*?(WMF|Wikimedia|here|for us|at foundation)|laid off|offboarding", re.IGNORECASE)
 fsRegex = re.compile(r"{{former( |_)staff}}\n", re.IGNORECASE)
 categoryRegex = re.compile(
     r"\[\[Category:Wikimedia( |_)Foundation( |_)staff\]\]", re.IGNORECASE
