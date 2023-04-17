@@ -1,5 +1,6 @@
 __pycache__/
 .tox/
+.vscode/
 venv/
 config.py
-unlocked_accounts.json
+*_unlocked_accounts.json
