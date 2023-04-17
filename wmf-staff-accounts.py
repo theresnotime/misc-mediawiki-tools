@@ -15,7 +15,7 @@ import regexes
 
 # Config
 SW_VERSION = "0.1.0"
-EXCEPTIONS = ["User:WMF Legal", "User:Emergency"]
+EXCEPTIONS = ["User:WMF Legal", "User:Emergency", "User:WMFOffice"]
 CATEGORY = "Category:Wikimedia Foundation staff"
 HEADERS = {"User-Agent": "TNTBot (https://meta.wikimedia.org/wiki/User:TNTBot)"}
 DELAY = 15
@@ -189,10 +189,12 @@ if __name__ == "__main__":
     locked_accounts = []
     edited_accounts = []
     cached_accounts = []
+    excluded_accounts = []
 
     print(f"Got {len(staff_accounts)} staff accounts. Checking cache file...")
 
     if os.path.isfile(cache_file):
+        print(f"Cache file found: {cache_file}")
         print(f"Cache file last modified: {modification_date(cache_file)}")
         if datetime.datetime.now() - modification_date(cache_file) > datetime.timedelta(
             hours=12
@@ -216,10 +218,13 @@ if __name__ == "__main__":
             print(f" - {user}: not a user page")
             continue
         if user in EXCEPTIONS:
+            excluded_accounts.append(user)
             print(f" - {user}: in exceptions list")
             continue
         if check_cache(cache_file, user) is True:
             cached_accounts.append(user)
+            if verbose:
+                print(f" - {user}: found in cache")
             continue
         user_status = get_lock_status(user)
         if user_status is not False and "locked" in user_status:
@@ -246,6 +251,7 @@ if __name__ == "__main__":
     print(f"Staff accounts locked: {len(locked_accounts)}")
     print(f"Staff accounts not locked: {len(unlocked_accounts) + len(cached_accounts)}")
     print(f"Staff accounts cached: {len(cached_accounts)}")
+    print(f"Staff accounts excluded: {len(excluded_accounts)}")
     print(f"Staff account user pages edited: {len(edited_accounts)}")
     print(f"Total: {len(staff_accounts)}")
 
