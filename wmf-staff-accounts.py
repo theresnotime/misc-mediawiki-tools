@@ -243,6 +243,7 @@ if __name__ == "__main__":
                         f" - {user}: locked, but for another reason ({lock_event['comment']})"
                     )
                     continue
+                print(f" - {user}: locked, regex match ({lock_event['comment']})")
                 page_content = wiki.page_text(user)
                 if page_content is not None:
                     modify_user_page(wiki, user, page_content)
