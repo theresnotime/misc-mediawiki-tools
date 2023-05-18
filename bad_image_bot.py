@@ -1,9 +1,7 @@
+import config
 import re
-
 import requests
 from pwiki.wiki import Wiki
-
-import config
 
 wiki = Wiki("meta.wikimedia.org", "TNTBot", config.TNT_BOT_BADIMAGE_PASS)
 page = "MediaWiki:Bad image list"

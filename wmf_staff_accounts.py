@@ -1,37 +1,23 @@
 import argparse
+import config
 import datetime
+import defaults
 import json
 import os
 import re
+import regexes
+import requests
 import sys
 import time
 from difflib import unified_diff
-
-import requests
 from pwiki.wiki import Wiki
-
-import config
-import regexes
-
-# Config
-SW_VERSION = "0.1.0"
-EXCEPTIONS = [
-    "User:WMF Legal",
-    "User:Emergency",
-    "User:WMFOffice",
-    "User:Ops Monitor (WMF)",
-]
-CATEGORY = "Category:Wikimedia Foundation staff"
-HEADERS = {"User-Agent": "TNTBot (https://meta.wikimedia.org/wiki/User:TNTBot)"}
-DELAY = 5
-SUMMARY = "([[:m:User:TNTBot#Marking_former_WMF_staff_accounts|automated]]) Marking user as former staff — many thanks, and best wishes for the future."
 
 
 def get_staff_accounts(wiki: Wiki) -> list[str]:
     """Get a list of staff accounts from the category page"""
-    wiki.purge(CATEGORY)
+    wiki.purge(defaults.CATEGORY)
     time.sleep(3)
-    return wiki.category_members(CATEGORY, ["User"])
+    return wiki.category_members(defaults.CATEGORY, ["User"])
 
 
 def validate_user(user: str):
@@ -39,11 +25,11 @@ def validate_user(user: str):
     return re.search(regexes.userRegex, user)
 
 
-def get_lock_status(user: str) -> bool | dict:
+def get_lock_status(user: str):
     """Get the lock status of a user"""
     response = requests.get(
         f"https://meta.wikimedia.org/w/api.php?action=query&format=json&meta=globaluserinfo&formatversion=2&guiuser={user}",
-        headers=HEADERS,
+        headers=defaults.HEADERS,
     )
     json = response.json()
     if "error" in json:
@@ -52,11 +38,11 @@ def get_lock_status(user: str) -> bool | dict:
     return json["query"]["globaluserinfo"]
 
 
-def get_lock_event(user: str) -> bool | dict:
+def get_lock_event(user: str):
     """Get the lock event of a user"""
     response = requests.get(
         f"https://meta.wikimedia.org/w/api.php?action=query&format=json&list=logevents&formatversion=2&letype=globalauth&letitle={user}%40global&lelimit=1",
-        headers=HEADERS,
+        headers=defaults.HEADERS,
     )
     json = response.json()
     if "error" in json:
@@ -117,56 +103,31 @@ def modify_user_page(wiki: Wiki, user: str, page_content: str) -> str:
     new_content = cleanup_params(new_content)
     new_content = add_formerparam(new_content)
     diff = unified_diff(old_content.splitlines(1), new_content.splitlines(1))
-    if DRY is False:
-        wiki.edit(title=user, text=new_content, summary=SUMMARY)
-        print(f" - {user}: Edited page and left the following summary: {SUMMARY}")
+    if defaults.DRY is False:
+        wiki.edit(title=user, text=new_content, summary=defaults.SUMMARY)
+        print(
+            f" - {user}: Edited page and left the following summary: {defaults.SUMMARY}"
+        )
     else:
         print(
-            f" - {user}: Would have edited page and left the following summary: {SUMMARY}"
+            f" - {user}: Would have edited page and left the following summary: {defaults.SUMMARY}"
         )
-    if VIEW_DIFF is True:
+    if defaults.VIEW_DIFF is True:
         print("Diff:")
         sys.stdout.writelines(diff)
         print("\n----\n")
-    if DRY is False:
-        print(f"Sleeping for {DELAY} seconds...")
-        time.sleep(DELAY)
+    if defaults.DRY is False:
+        print(f"Sleeping for {defaults.DELAY} seconds...")
+        time.sleep(defaults.DELAY)
     return new_content
 
 
-if __name__ == "__main__":
-    print(f"WMF Staff Accounts helper, v{SW_VERSION}")
-    parser = argparse.ArgumentParser(
-        prog="wmf-staff-accounts",
-        description="WMF Staff Accounts helper, v" + SW_VERSION,
-    )
-    parser.add_argument(
-        "-w",
-        "--wiki",
-        required=True,
-        help="The wiki domain to run on",
-        default="meta.wikimedia.org",
-    )
-    parser.add_argument("--diff", help="Show diff", action="store_true")
-    parser.add_argument(
-        "--cache-only", help="Only cache, do not make changes", action="store_true"
-    )
-    parser.add_argument(
-        "--yes", help="Skip confirmation before start", action="store_true"
-    )
-    parser.add_argument("--regen-cache", help="Regenerate cache", action="store_true")
-    parser.add_argument("--dry", help="Don't make any edits", action="store_true")
-    parser.add_argument("-v", "--verbose", help="Be verbose", action="store_true")
-    args = parser.parse_args()
-    DRY = args.dry
-    VIEW_DIFF = args.diff
-    wiki_domain = args.wiki
-    cache_only = args.cache_only
-    verbose = args.verbose
-
+def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str):
+    """Main function"""
     # Init
-    wiki = Wiki(wiki_domain, "TNTBot", config.TNT_BOT_PASS)
-    cache_file = f"{wiki_domain}_unlocked_accounts.json"
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+    cache_file = f"{cache_dir}/{wiki_domain}_unlocked_accounts.json"
 
     # Print settings
     print(f"Running on https://{wiki_domain}")
@@ -178,9 +139,9 @@ if __name__ == "__main__":
         print(
             "Cache-only mode enabled: Locked accounts will be ignored, and no edits will be made."
         )
-        DRY = True  # Not needed, but just in case
+        defaults.DRY = True  # Not needed, but just in case
     else:
-        if DRY:
+        if defaults.DRY:
             print("Dry run mode enabled: No edits will be made.")
         else:
             print("NOTICE: Edits will be made.")
@@ -188,7 +149,8 @@ if __name__ == "__main__":
             time.sleep(2)
 
     # Start
-    print(f"Purging {CATEGORY} and getting staff accounts...")
+    wiki = Wiki(wiki_domain, "TNTBot", config.TNT_BOT_PASS)
+    print(f"Purging {defaults.CATEGORY} and getting staff accounts...")
     staff_accounts = get_staff_accounts(wiki)
     unlocked_accounts = []
     locked_accounts = []
@@ -202,12 +164,12 @@ if __name__ == "__main__":
         print(f"Cache file found: {cache_file}")
         print(f"Cache file last modified: {modification_date(cache_file)}")
         if datetime.datetime.now() - modification_date(cache_file) > datetime.timedelta(
-            hours=12
+            hours=48
         ):
-            print("Cache file is older than 12 hours, deleting...")
+            print("Cache file is older than 48 hours, deleting...")
             os.remove(cache_file)
         else:
-            print("Cache file is less than 12 hours old — OK to use.")
+            print("Cache file is less than 48 hours old — OK to use.")
     else:
         print("No cache file found — will create one.")
 
@@ -222,7 +184,7 @@ if __name__ == "__main__":
         if validate_user(user) is not None:
             print(f" - {user}: not a user page")
             continue
-        if user in EXCEPTIONS:
+        if user in defaults.EXCEPTIONS:
             excluded_accounts.append(user)
             print(f" - {user}: in exceptions list")
             continue
@@ -268,3 +230,45 @@ if __name__ == "__main__":
         unlocked_cache.write(unlocked_json)
         unlocked_cache.close()
         print("Unlocked accounts cached.")
+
+
+if __name__ == "__main__":
+    print(f"WMF Staff Accounts helper, v{defaults.SW_VERSION}")
+    parser = argparse.ArgumentParser(
+        prog="wmf-staff-accounts",
+        description="WMF Staff Accounts helper, v" + defaults.SW_VERSION,
+    )
+    parser.add_argument(
+        "-w",
+        "--wiki",
+        required=True,
+        help="The wiki domain to run on",
+        default="meta.wikimedia.org",
+    )
+    parser.add_argument(
+        "--cache-dir",
+        help="Cache directory",
+        default="./cache",
+        type=str,
+        metavar="/path/to/dir",
+    )
+    parser.add_argument("--diff", help="Show diff", action="store_true")
+    parser.add_argument(
+        "--cache-only", help="Only cache, do not make changes", action="store_true"
+    )
+    parser.add_argument(
+        "--yes", help="Skip confirmation before start", action="store_true"
+    )
+    parser.add_argument("--regen-cache", help="Regenerate cache", action="store_true")
+    parser.add_argument("--dry", help="Don't make any edits", action="store_true")
+    parser.add_argument("-v", "--verbose", help="Be verbose", action="store_true")
+    args = parser.parse_args()
+    defaults.DRY = args.dry
+    defaults.VIEW_DIFF = args.diff
+    wiki_domain = args.wiki
+    cache_only = args.cache_only
+    verbose = args.verbose
+    cache_dir = args.cache_dir
+
+    # Start
+    main(args, wiki_domain, cache_only, verbose, cache_dir)
