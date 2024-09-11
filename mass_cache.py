@@ -17,6 +17,8 @@ if __name__ == "__main__":
         "en.wikiquote.org",
         "en.wikiversity.org",
         "en.wikivoyage.org",
+        "test.wikipedia.org",
+        "test2.wikipedia.org",
     ]
 
     # Run for each project
