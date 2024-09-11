@@ -206,7 +206,7 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
                 print(f" - {user}: locked, regex match ({lock_event['comment']})")
                 if cache_only:
                     if verbose:
-                        print(' - Cache-only mode enabled: Not editing user page.')
+                        print(" - Cache-only mode enabled: Not editing user page.")
                     continue
                 page_content = wiki.page_text(user)
                 if page_content is not None:
