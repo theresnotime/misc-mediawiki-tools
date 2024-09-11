@@ -4,3 +4,4 @@ __pycache__/
 venv/
 config.py
 *_unlocked_accounts.json
+.DS_Store
