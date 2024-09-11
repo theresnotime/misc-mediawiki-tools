@@ -195,8 +195,6 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
             continue
         user_status = get_lock_status(user)
         if user_status is not False and "locked" in user_status:
-            if cache_only:
-                continue
             lock_event = get_lock_event(user)
             if lock_event is not False and "comment" in lock_event:
                 locked_accounts.append(user)
@@ -206,6 +204,10 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
                     )
                     continue
                 print(f" - {user}: locked, regex match ({lock_event['comment']})")
+                if cache_only:
+                    if verbose:
+                        print(" - Cache-only mode enabled: Not editing user page.")
+                    continue
                 page_content = wiki.page_text(user)
                 if page_content is not None:
                     modify_user_page(wiki, user, page_content)
