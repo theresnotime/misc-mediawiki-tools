@@ -8,7 +8,7 @@ import sys
 import time
 from datetime import datetime
 from pwiki.wiki import Wiki
-from termcolor import colored, cprint
+from termcolor import cprint
 
 wiki = Wiki("en.wikipedia.org", "TNTBot", config.TNT_BOT_PASS)
 # TODO: Remember that non-capturing regex exists, silly (:
