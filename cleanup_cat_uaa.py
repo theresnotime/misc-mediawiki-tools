@@ -3,34 +3,38 @@ import config
 import defaults
 import re
 import requests
+import sys
 import time
 from datetime import datetime
 from pwiki.wiki import Wiki
 
 wiki = Wiki("en.wikipedia.org", "TNTBot", config.TNT_BOT_PASS)
 removal_regex = re.compile(
-    r"<!-- THE FOLLOWING TWO CATEGORIES .*?<!-- \*\*\* -->", re.IGNORECASE
+    r"<!-- THE FOLLOWING( TWO)? CATEGOR.*?(!<-- \*\*\* -->)? ?<!-- Template:",
+    re.IGNORECASE,
 )
-edit_summary = "Removing [[CAT:UAA]] from indefinitely blocked editor ([[Wikipedia:Bots/Requests for approval/TNTBot 6|BRFA]])"
+edit_summary = "[supervised testing] Removing [[CAT:UAA]] from indefinitely blocked editor ([[Wikipedia:Bots/Requests for approval/TNTBot 6|BRFA]])"
 stats = {}
 stats["checked_subcats"] = 0
 stats["checked_users"] = 0
 stats["start_time"] = time.time()
 
 
-def get_subcats():
+def get_subcats() -> list[str]:
     """Get the subcategories of the UAA category"""
     return wiki.category_members(
         "Category:Wikipedia usernames with possible policy issues", ["Category"]
     )
 
 
-def get_category_members(category):
+def get_category_members(category: str) -> list[str]:
     """Get the members of a category"""
     return wiki.category_members(category, ["User talk"])
 
 
-def log_data(data, filename, also_print=False, dont_write_to_file=False):
+def log_data(
+    data: str, filename: str, also_print: bool = False, dont_write_to_file: bool = False
+) -> None:
     """Log data to a file/terminal"""
     with open(filename, "a+") as f:
         dt_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -41,7 +45,7 @@ def log_data(data, filename, also_print=False, dont_write_to_file=False):
             print(content)
 
 
-def log_to_wiki(data):
+def log_to_wiki(data: str) -> None:
     """Log data to a subpage"""
     log_page = "User:TNTBot/Logs/UAA Cleanup"
     content = wiki.page_text(log_page)
@@ -57,16 +61,16 @@ def log_to_wiki(data):
         print(f"Dry run, not logging {data}")
 
 
-def remove_page_from_category(page):
+def remove_page_from_category(page: str) -> None:
     """Remove a page from the UAA category"""
     content = wiki.page_text(page)
-    new_content = removal_regex.sub("", content)
+    new_content = removal_regex.sub("<!-- Template:", content)
     if not defaults.DRY:
         log_data(f"Editing {page}...", "cleanup_cat_uaa-debug.log", also_print=True)
         wiki.edit(
             title=page,
             text=new_content,
-            summary="Removing user from UAA category",
+            summary=edit_summary,
             minor=True,
         )
     else:
@@ -76,7 +80,7 @@ def remove_page_from_category(page):
     time.sleep(1)
 
 
-def check_for_block(user):
+def check_for_block(user: str) -> bool:
     """Check if a user is blocked indefinitely"""
     user = user.replace("User talk:", "")
     response = requests.get(
@@ -93,7 +97,15 @@ def check_for_block(user):
         return True
 
 
-def check_category(subcat):
+def make_log_message(user: str, subcat: str) -> str:
+    """Make a log message for a user"""
+    dt_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    username = user.replace("User talk:", "")
+    template_str = "{{noping|" + username + "}}"
+    return f"{dt_string}: [supervised testing] Removed {template_str} from [[:{subcat}]] -- ~~~~"
+
+
+def check_category(subcat: str) -> None:
     """Check a UAA subcategory for indefinitely blocked users"""
     stats["checked_subcats"] += 1
     wiki.purge(subcat)
@@ -119,11 +131,17 @@ def check_category(subcat):
                 also_print=True,
             )
             remove_page_from_category(user)
-            log_data(
-                f"Removed {user} from {subcat}.",
-                "cleanup_cat_uaa-debug.log",
-                also_print=True,
-            )
+            if not defaults.DRY:
+                log_to_wiki(make_log_message(user, subcat))
+                log_data(
+                    f"Removed {user} from {subcat}.",
+                    "cleanup_cat_uaa-debug.log",
+                    also_print=True,
+                )
+                time.sleep(1)
+                if defaults.SUPERVISED:
+                    print("1 edit made, and supervised testing is enabled. Exiting.")
+                    sys.exit()
         else:
             log_data(
                 f"{user} is not yet blocked indefinitely.",
@@ -143,15 +161,28 @@ if __name__ == "__main__":
         help="Run on one specific category",
     )
     parser.add_argument("--dry", help="Don't make any edits", action="store_true")
+    parser.add_argument(
+        "--supervised",
+        help="Supervised testing (make 1 edit and exit)",
+        action="store_true",
+    )
     args = parser.parse_args()
     defaults.DRY = args.dry
+    defaults.SUPERVISED = args.supervised
 
     if defaults.DRY:
         print("Dry run enabled. No edits will be made.")
+        time.sleep(1)
+
+    if defaults.SUPERVISED:
+        print("Supervised testing enabled. Only one edit will be made.")
+        time.sleep(1)
 
     if args.cat:
+        print(f"Starting UAA cleanup on {args.cat}...")
         check_category(args.cat)
     else:
+        print("Starting UAA cleanup...")
         uaa_subcats = get_subcats()
         for subcat in uaa_subcats:
             check_category(subcat)
