@@ -13,7 +13,7 @@ removal_regex = re.compile(
     r"<!-- THE FOLLOWING( TWO)? CATEGOR.*?(!<-- \*\*\* -->)? ?<!-- Template:",
     re.IGNORECASE,
 )
-edit_summary = "[supervised testing] Removing [[CAT:UAA]] from indefinitely blocked editor ([[Wikipedia:Bots/Requests for approval/TNTBot 6|BRFA]])"
+edit_summary = "Removing [[CAT:UAA]] from indefinitely blocked editor ([[Wikipedia:Bots/Requests for approval/TNTBot 6|BRFA]])"
 stats = {}
 stats["checked_subcats"] = 0
 stats["checked_users"] = 0
@@ -102,7 +102,7 @@ def make_log_message(user: str, subcat: str) -> str:
     dt_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     username = user.replace("User talk:", "")
     template_str = "{{noping|" + username + "}}"
-    return f"{dt_string}: [supervised testing] Removed {template_str} from [[:{subcat}]] -- ~~~~"
+    return f"{dt_string}: Removed {template_str} from [[:{subcat}]] -- ~~~~"
 
 
 def check_category(subcat: str) -> None:
