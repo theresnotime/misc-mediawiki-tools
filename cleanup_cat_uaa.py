@@ -90,6 +90,19 @@ def remove_page_from_category(page: str) -> None:
     time.sleep(1)
 
 
+def get_last_edit(expected_page: str):
+    bot_contribs = wiki.contribs("User:TNTBot", ns=["User talk"])
+    return bot_contribs[0]
+
+
+def get_page_last_edit(page: str):
+    last_edit = wiki.revisions(page)[0]
+    if last_edit.user == "TNTBot":
+        return last_edit
+    else:
+        return False
+
+
 def check_for_block(user: str) -> bool:
     """Check if a user is blocked indefinitely"""
     user = user.replace("User talk:", "")
@@ -107,12 +120,15 @@ def check_for_block(user: str) -> bool:
         return True
 
 
-def make_log_message(user: str, subcat: str) -> str:
+def make_log_message(user: str, subcat: str, revid) -> str:
     """Make a log message for a user"""
     dt_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     username = user.replace("User talk:", "")
     template_str = "{{noping|" + username + "}}"
-    return f"{dt_string}: Removed {template_str} from [[:{subcat}]] -- ~~~~"
+    if revid:
+        return f"{dt_string}: Removed ([[Special:Diff/{revid}|diff]]) {template_str} from [[:{subcat}]] -- ~~~~"
+    else:
+        return f"{dt_string}: Removed {template_str} from [[:{subcat}]] -- ~~~~"
 
 
 def check_category(subcat: str) -> None:
@@ -147,7 +163,8 @@ def check_category(subcat: str) -> None:
             )
             remove_page_from_category(user)
             if not defaults.DRY:
-                log_to_wiki(make_log_message(user, subcat))
+                revision = get_page_last_edit(user).revid
+                log_to_wiki(make_log_message(user, subcat, revision))
                 log_data(
                     f"Removed {user} from {subcat}.",
                     "cleanup_cat_uaa-debug.log",
@@ -180,6 +197,7 @@ if __name__ == "__main__":
         "--cat",
         help="Run on one specific category",
     )
+    parser.add_argument("--shuffle", help="Shuffle subcategories", action="store_true")
     parser.add_argument("--dry", help="Don't make any edits", action="store_true")
     parser.add_argument(
         "--supervised",
@@ -190,6 +208,8 @@ if __name__ == "__main__":
     defaults.DRY = args.dry
     defaults.SUPERVISED = args.supervised
 
+    print("Starting UAA cleanup...")
+
     if defaults.DRY:
         cprint("Dry run enabled. No edits will be made.", "blue")
         time.sleep(1)
@@ -199,11 +219,13 @@ if __name__ == "__main__":
         time.sleep(1)
 
     if args.cat:
-        print(f"Starting UAA cleanup on {args.cat}...")
+        cprint(f"Only checking {args.cat}", "blue")
         check_category(args.cat)
     else:
-        print("Starting UAA cleanup...")
         uaa_subcats = get_subcats()
+        if args.shuffle:
+            cprint("Shuffling subcategories...", "blue")
+            random.shuffle(uaa_subcats)
         for subcat in uaa_subcats:
             check_category(subcat)
 
