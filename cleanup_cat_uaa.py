@@ -11,6 +11,7 @@ from pwiki.wiki import Wiki
 from termcolor import colored, cprint
 
 wiki = Wiki("en.wikipedia.org", "TNTBot", config.TNT_BOT_PASS)
+# TODO: Remember that non-capturing regex exists, silly (:
 removal_regex = re.compile(
     r"<!-- THE FOLLOWING( TWO)? CATEGOR.*?(!<-- \*\*\* -->)? ?<!-- Template:",
     re.IGNORECASE,
