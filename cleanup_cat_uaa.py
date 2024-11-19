@@ -163,8 +163,12 @@ def check_category(subcat: str) -> None:
             )
             remove_page_from_category(user)
             if not defaults.DRY:
-                revision = get_page_last_edit(user).revid
-                log_to_wiki(make_log_message(user, subcat, revision))
+                revision = get_page_last_edit(user)
+                if revision:
+                    revision_id = revision.revid
+                else:
+                    revision_id = False
+                log_to_wiki(make_log_message(user, subcat, revision_id))
                 log_data(
                     f"Removed {user} from {subcat}.",
                     "cleanup_cat_uaa-debug.log",
