@@ -8,6 +8,7 @@ import sys
 import time
 from datetime import datetime
 from pwiki.wiki import Wiki
+from termcolor import colored, cprint
 
 wiki = Wiki("en.wikipedia.org", "TNTBot", config.TNT_BOT_PASS)
 removal_regex = re.compile(
@@ -34,7 +35,12 @@ def get_category_members(category: str) -> list[str]:
 
 
 def log_data(
-    data: str, filename: str, also_print: bool = False, dont_write_to_file: bool = False
+    data: str,
+    filename: str,
+    also_print: bool = False,
+    dont_write_to_file: bool = False,
+    colour_print=None,
+    underline: bool = False,
 ) -> None:
     """Log data to a file/terminal"""
     with open(filename, "a+") as f:
@@ -43,7 +49,10 @@ def log_data(
         if not dont_write_to_file:
             f.write(content + "\n")
         if also_print:
-            print(content)
+            if underline:
+                cprint(content, colour_print, attrs=["underline"])
+            else:
+                cprint(content, colour_print)
 
 
 def log_to_wiki(data: str) -> None:
@@ -113,10 +122,13 @@ def check_category(subcat: str) -> None:
     subcat_members = get_category_members(subcat)
     subcat_size = len(subcat_members)
     log_data(
-        f"Checking {subcat} ({subcat_size})...",
+        f"Checking category {subcat} ({subcat_size})...",
         "cleanup_cat_uaa-debug.log",
         also_print=True,
+        colour_print="blue",
+        underline=True,
     )
+    time.sleep(0.3)
     random.shuffle(subcat_members)
     for user in subcat_members:
         stats["checked_users"] += 1
@@ -131,6 +143,7 @@ def check_category(subcat: str) -> None:
                 f"{user} is blocked indefinitely.",
                 "cleanup_cat_uaa-debug.log",
                 also_print=True,
+                colour_print="green",
             )
             remove_page_from_category(user)
             if not defaults.DRY:
@@ -139,16 +152,21 @@ def check_category(subcat: str) -> None:
                     f"Removed {user} from {subcat}.",
                     "cleanup_cat_uaa-debug.log",
                     also_print=True,
+                    colour_print="green",
                 )
                 time.sleep(1)
                 if defaults.SUPERVISED:
-                    print("1 edit made, and supervised testing is enabled. Exiting.")
+                    cprint(
+                        "1 edit made, and supervised testing is enabled. Exiting.",
+                        "blue",
+                    )
                     sys.exit()
         else:
             log_data(
                 f"{user} is not yet blocked indefinitely.",
                 "cleanup_cat_uaa-debug.log",
                 also_print=True,
+                colour_print="yellow",
             )
 
 
@@ -173,11 +191,11 @@ if __name__ == "__main__":
     defaults.SUPERVISED = args.supervised
 
     if defaults.DRY:
-        print("Dry run enabled. No edits will be made.")
+        cprint("Dry run enabled. No edits will be made.", "blue")
         time.sleep(1)
 
     if defaults.SUPERVISED:
-        print("Supervised testing enabled. Only one edit will be made.")
+        cprint("Supervised testing enabled. Only one edit will be made.", "blue")
         time.sleep(1)
 
     if args.cat:
