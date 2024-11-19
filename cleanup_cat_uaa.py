@@ -1,6 +1,7 @@
 import argparse
 import config
 import defaults
+import random
 import re
 import requests
 import sys
@@ -17,7 +18,7 @@ edit_summary = "Removing [[CAT:UAA]] from indefinitely blocked editor ([[Wikiped
 stats = {}
 stats["checked_subcats"] = 0
 stats["checked_users"] = 0
-stats["start_time"] = time.time()
+stats["start_time"] = round(time.time())
 
 
 def get_subcats() -> list[str]:
@@ -116,6 +117,7 @@ def check_category(subcat: str) -> None:
         "cleanup_cat_uaa-debug.log",
         also_print=True,
     )
+    random.shuffle(subcat_members)
     for user in subcat_members:
         stats["checked_users"] += 1
         log_data(
@@ -187,7 +189,7 @@ if __name__ == "__main__":
         for subcat in uaa_subcats:
             check_category(subcat)
 
-    stats["end_time"] = time.time()
+    stats["end_time"] = round(time.time())
     stats["elapsed_time"] = round(stats["end_time"] - stats["start_time"])
     print(f"Elapsed time: ~{stats['elapsed_time']} seconds.")
     print(f"Checked {stats['checked_subcats']} UAA subcategories.")
