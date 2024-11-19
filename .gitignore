@@ -5,3 +5,4 @@ venv/
 config.py
 *_unlocked_accounts.json
 .DS_Store
+*.log
