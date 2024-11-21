@@ -1,2 +1,9 @@
 TNT_BOT_BADIMAGE_PASS = ""
 TNT_BOT_PASS = ""
+
+# wmf_staff_accounts
+ENABLED_PROJECTS = [
+    "meta.wikimedia.org",
+    "en.wikipedia.org",
+    "en.wikiquote.org",
+]

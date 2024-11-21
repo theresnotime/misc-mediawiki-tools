@@ -132,6 +132,33 @@ def modify_user_page(wiki: Wiki, user: str, page_content: str) -> str:
     return new_content
 
 
+def should_I_run(wiki: Wiki, wiki_domain: str) -> None:
+    """Check if the bot should run on this wiki"""
+    if defaults.DRY:
+        cprint("FYI: This wiki is not in the enabled projects list.", "yellow")
+        time.sleep(2)
+        return
+    # Check if the wiki domain is in the enabled projects list
+    if wiki_domain not in config.ENABLED_PROJECTS:
+        # Regardless of the -y flag, prompt the user
+        input(
+            colored("This wiki is not in the enabled projects list — continue?", "red")
+        )
+        time.sleep(1)
+        input(colored("Are you sure?", "red"))
+
+    # Check if the account is a bot on this wiki (and prompt if not)
+    bot_rights = get_user_rights(wiki, wiki.whoami())
+    if "bot" not in bot_rights:
+        if args.yes is False:
+            input(
+                colored("This account is not a bot on this wiki — continue?", "yellow")
+            )
+        else:
+            cprint("This account is not a bot on this wiki.", "yellow")
+            time.sleep(1)
+
+
 def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str):
     """Main function"""
     # Init
@@ -160,16 +187,8 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
 
     # Start
     wiki = Wiki(wiki_domain, "TNTBot", config.TNT_BOT_PASS)
-    # Check if the account is a bot on this wiki
-    bot_rights = get_user_rights(wiki, wiki.whoami())
-    if "bot" not in bot_rights:
-        if args.yes is False:
-            input(
-                colored("This account is not a bot on this wiki — continue?", "yellow")
-            )
-        else:
-            cprint("This account is not a bot on this wiki.", "yellow")
-            time.sleep(1)
+    # Check if I should run on this wiki
+    should_I_run(wiki, wiki_domain)
     print(f"Purging {defaults.CATEGORY} and getting staff accounts...")
     staff_accounts = get_staff_accounts(wiki)
     unlocked_accounts = []
@@ -219,11 +238,14 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
             if lock_event is not False and "comment" in lock_event:
                 locked_accounts.append(user)
                 if check_lock_reason(lock_event["comment"]) is None:
-                    print(
-                        f" - {user}: locked, but for another reason ({lock_event['comment']})"
+                    cprint(
+                        f" - {user}: locked, but for another reason ({lock_event['comment']})",
+                        "yellow",
                     )
                     continue
-                print(f" - {user}: locked, regex match ({lock_event['comment']})")
+                cprint(
+                    f" - {user}: locked, regex match ({lock_event['comment']})", "green"
+                )
                 if cache_only:
                     if verbose:
                         print(" - Cache-only mode enabled: Not editing user page.")
