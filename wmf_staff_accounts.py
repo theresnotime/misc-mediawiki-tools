@@ -23,6 +23,11 @@ def get_staff_accounts(wiki: Wiki) -> list[str]:
     return wiki.category_members(defaults.CATEGORY, ["User"])
 
 
+def check_category_exists(wiki: Wiki, category: str) -> bool:
+    """Check if a category exists"""
+    return wiki.exists(category)
+
+
 def validate_user(user: str):
     """Validate a user name (i.e. a user page)"""
     return re.search(common_regexes.userRegex, user)
@@ -162,12 +167,15 @@ def should_I_run(wiki: Wiki, wiki_domain: str) -> None:
 def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str):
     """Main function"""
     # Init
+    defaults.DRY = args.dry
+    defaults.VIEW_DIFF = args.diff
+    defaults.CATEGORY = args.category
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
     cache_file = f"{cache_dir}/{wiki_domain}_unlocked_accounts.json"
 
     # Print settings
-    print(f"Running on https://{wiki_domain}")
+    print(f"Running on https://{wiki_domain} with category {defaults.CATEGORY}")
     if args.regen_cache:
         if os.path.isfile(cache_file):
             print(f"I will regenerate cache file '{cache_file}'...")
@@ -186,9 +194,17 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
             time.sleep(2)
 
     # Start
-    wiki = Wiki(wiki_domain, "TNTBot", config.TNT_BOT_PASS)
+    try:
+        wiki = Wiki(wiki_domain, "TNTBot", config.TNT_BOT_PASS)
+    except Exception as e:
+        # Throw error and exit
+        cprint(f"Error: {e}", "red")
+        return False
     # Check if I should run on this wiki
     should_I_run(wiki, wiki_domain)
+    if check_category_exists(wiki, defaults.CATEGORY) is False:
+        cprint(f"Category {defaults.CATEGORY} on {wiki_domain} does not exist.", "red")
+        return False
     print(f"Purging {defaults.CATEGORY} and getting staff accounts...")
     staff_accounts = get_staff_accounts(wiki)
     unlocked_accounts = []
@@ -275,6 +291,8 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
         unlocked_cache.close()
         print("Unlocked accounts cached.")
 
+    return True
+
 
 if __name__ == "__main__":
     print(f"WMF Staff Accounts helper, v{SW_VERSION}")
@@ -296,6 +314,13 @@ if __name__ == "__main__":
         type=str,
         metavar="/path/to/dir",
     )
+    parser.add_argument(
+        "--category",
+        help="Which category to use",
+        default=defaults.CATEGORY,
+        type=str,
+        metavar="Namespace:Name",
+    )
     parser.add_argument("--diff", help="Show diff", action="store_true")
     parser.add_argument(
         "--cache-only", help="Only cache, do not make changes", action="store_true"
@@ -309,6 +334,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     defaults.DRY = args.dry
     defaults.VIEW_DIFF = args.diff
+    defaults.CATEGORY = args.category
     wiki_domain = args.wiki
     cache_only = args.cache_only
     verbose = args.verbose

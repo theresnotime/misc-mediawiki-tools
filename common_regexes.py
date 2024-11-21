@@ -11,3 +11,4 @@ categoryRegex = re.compile(
 )
 userinfoRegex = re.compile(r"{{user( |_)info", re.IGNORECASE)
 cleanupRegex = re.compile(r"\| ?former ?= ?yes\n", re.IGNORECASE)
+wiki_domain_regex = re.compile(r"https://(?P<wiki_domain>.*?)/wiki", re.IGNORECASE)
