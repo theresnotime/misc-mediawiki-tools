@@ -2,7 +2,7 @@ import re
 
 userRegex = re.compile(r"\/.*")
 commentRegex = re.compile(
-    r"no longer (wokrs?|works?|employed)?.*?(WMF|Wikimedia|here|for (us|the)|at foundation)|laid off|offboard(ing)?",
+    r"no longer (wokrs?|works?|employed)?.*?(WMF|Wikimedia|here|for (us|the)|at foundation)|laid off|off(-)?board(ing)?",
     re.IGNORECASE,
 )
 fsRegex = re.compile(r"{{former( |_)staff}}\n", re.IGNORECASE)
