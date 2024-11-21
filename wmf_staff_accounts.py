@@ -1,17 +1,19 @@
 import argparse
+import common_regexes
 import config
 import datetime
 import defaults
 import json
 import os
 import re
-import regexes
 import requests
 import sys
 import time
 from difflib import unified_diff
 from pwiki.wiki import Wiki
 from termcolor import colored, cprint
+
+SW_VERSION = "1.0"
 
 
 def get_staff_accounts(wiki: Wiki) -> list[str]:
@@ -23,7 +25,7 @@ def get_staff_accounts(wiki: Wiki) -> list[str]:
 
 def validate_user(user: str):
     """Validate a user name (i.e. a user page)"""
-    return re.search(regexes.userRegex, user)
+    return re.search(common_regexes.userRegex, user)
 
 
 def get_user_rights(wiki: Wiki, user: str):
@@ -61,7 +63,7 @@ def get_lock_event(user: str):
 
 def check_lock_reason(reason: str):
     """Check if the lock reason matches the regex"""
-    return re.search(regexes.commentRegex, reason)
+    return re.search(common_regexes.commentRegex, reason)
 
 
 def check_cache(cache_file: str, user: str) -> bool:
@@ -83,22 +85,24 @@ def modification_date(filename: str) -> datetime:
 
 def rm_formerstaff(page_content: str) -> str:
     """Remove the {{former staff}} template from a page"""
-    return regexes.fsRegex.sub("", page_content)
+    return common_regexes.fsRegex.sub("", page_content)
 
 
 def rm_category(page_content: str) -> str:
     """Remove the category from a page"""
-    return regexes.categoryRegex.sub("", page_content)
+    return common_regexes.categoryRegex.sub("", page_content)
 
 
 def add_formerparam(page_content: str) -> str:
     """Add the |former=yes parameter to the {{user info}} template"""
-    return regexes.userinfoRegex.sub("{{user info\n| former = true", page_content)
+    return common_regexes.userinfoRegex.sub(
+        "{{user info\n| former = true", page_content
+    )
 
 
 def cleanup_params(page_content: str) -> str:
     """Cleanup parameters"""
-    return regexes.cleanupRegex.sub("", page_content)
+    return common_regexes.cleanupRegex.sub("", page_content)
 
 
 def modify_user_page(wiki: Wiki, user: str, page_content: str) -> str:
@@ -110,7 +114,7 @@ def modify_user_page(wiki: Wiki, user: str, page_content: str) -> str:
     new_content = add_formerparam(new_content)
     diff = unified_diff(old_content.splitlines(1), new_content.splitlines(1))
     if defaults.DRY is False:
-        wiki.edit(title=user, text=new_content, summary=defaults.SUMMARY)
+        wiki.edit(title=user, text=new_content, summary=defaults.SUMMARY, minor=True)
         print(
             f" - {user}: Edited page and left the following summary: {defaults.SUMMARY}"
         )
@@ -251,10 +255,10 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
 
 
 if __name__ == "__main__":
-    print(f"WMF Staff Accounts helper, v{defaults.SW_VERSION}")
+    print(f"WMF Staff Accounts helper, v{SW_VERSION}")
     parser = argparse.ArgumentParser(
         prog="wmf-staff-accounts",
-        description="WMF Staff Accounts helper, v" + defaults.SW_VERSION,
+        description="WMF Staff Accounts helper, v" + SW_VERSION,
     )
     parser.add_argument(
         "-w",

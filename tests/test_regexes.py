@@ -1,6 +1,6 @@
+import common_regexes
 import pytest
 import re
-import regexes
 
 match_these_strings = [
     "off-boarding",
@@ -23,9 +23,9 @@ dont_match_these_strings = [
 
 @pytest.mark.parametrize("match_string", match_these_strings)
 def test_regex_matches(match_string):
-    assert re.search(regexes.commentRegex, match_string) is not None
+    assert re.search(common_regexes.commentRegex, match_string) is not None
 
 
 @pytest.mark.parametrize("no_match_string", dont_match_these_strings)
 def test_regex_doesnt_match(no_match_string):
-    assert re.search(regexes.commentRegex, no_match_string) is None
+    assert re.search(common_regexes.commentRegex, no_match_string) is None
