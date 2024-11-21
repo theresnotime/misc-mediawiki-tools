@@ -11,6 +11,7 @@ import sys
 import time
 from difflib import unified_diff
 from pwiki.wiki import Wiki
+from termcolor import colored, cprint
 
 
 def get_staff_accounts(wiki: Wiki) -> list[str]:
@@ -23,6 +24,11 @@ def get_staff_accounts(wiki: Wiki) -> list[str]:
 def validate_user(user: str):
     """Validate a user name (i.e. a user page)"""
     return re.search(regexes.userRegex, user)
+
+
+def get_user_rights(wiki: Wiki, user: str):
+    """Get a user's rights"""
+    return wiki.list_user_rights(user)
 
 
 def get_lock_status(user: str):
@@ -142,14 +148,24 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
         defaults.DRY = True  # Not needed, but just in case
     else:
         if defaults.DRY:
-            print("Dry run mode enabled: No edits will be made.")
+            cprint("Dry run mode enabled: No edits will be made.", "yellow")
         else:
-            print("NOTICE: Edits will be made.")
+            cprint("WARN: Edits will be made.", "red")
             # Panic delay
             time.sleep(2)
 
     # Start
     wiki = Wiki(wiki_domain, "TNTBot", config.TNT_BOT_PASS)
+    # Check if the account is a bot on this wiki
+    bot_rights = get_user_rights(wiki, wiki.whoami())
+    if "bot" not in bot_rights:
+        if args.yes is False:
+            input(
+                colored("This account is not a bot on this wiki — continue?", "yellow")
+            )
+        else:
+            cprint("This account is not a bot on this wiki.", "yellow")
+            time.sleep(1)
     print(f"Purging {defaults.CATEGORY} and getting staff accounts...")
     staff_accounts = get_staff_accounts(wiki)
     unlocked_accounts = []
