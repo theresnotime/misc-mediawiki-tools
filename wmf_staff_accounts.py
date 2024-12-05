@@ -139,10 +139,6 @@ def modify_user_page(wiki: Wiki, user: str, page_content: str) -> str:
 
 def should_I_run(wiki: Wiki, wiki_domain: str) -> None:
     """Check if the bot should run on this wiki"""
-    if defaults.DRY:
-        cprint("FYI: This wiki is not in the enabled projects list.", "yellow")
-        time.sleep(2)
-        return
     # Check if the wiki domain is in the enabled projects list
     if wiki_domain not in config.ENABLED_PROJECTS:
         # Regardless of the -y flag, prompt the user

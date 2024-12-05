@@ -1,4 +1,4 @@
-import utils
+import common_utils
 import wmf_staff_accounts
 from types import SimpleNamespace
 
@@ -14,12 +14,12 @@ def do_cache(args, project) -> bool:
 
 
 if __name__ == "__main__":
-    projects = utils.get_projects()
+    projects = common_utils.get_projects()
     print(f"[mass_cache] Got {len(projects)} projects to cache...")
 
     # Run for each project
     for project in projects:
-        title, wiki_domain = utils.parse_project(projects, project)
+        title, wiki_domain = common_utils.parse_project(projects, project)
         if wiki_domain is None or title is None:
             print(f"[mass_cache] Skipping {project} due to missing data.\n\n")
             continue
