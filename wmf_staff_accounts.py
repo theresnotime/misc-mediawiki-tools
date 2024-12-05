@@ -13,7 +13,7 @@ from difflib import unified_diff
 from pwiki.wiki import Wiki
 from termcolor import colored, cprint
 
-SW_VERSION = "1.0"
+SW_VERSION = "1.1"
 
 
 def get_staff_accounts(wiki: Wiki) -> list[str]:

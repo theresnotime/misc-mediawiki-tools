@@ -30,6 +30,17 @@ lock_reason_doesnt_match = [
 category_match = [
     "[[Category:Wikimedia Foundation staff]]",
 ]
+former_staff_template_match = [
+    "{{former staff}}\n",
+    "{{Former Staff}}\n",
+    "{{former_staff}}\n",
+    "{{FormerStaff}}\n",
+    "{{formerstaff}}\n",
+]
+former_staff_template_doesnt_match = [
+    "|former=yes\n",
+    "|former=no\n",
+]
 
 
 @pytest.mark.parametrize("match_string", lock_reason_match)
@@ -40,6 +51,16 @@ def test_lock_reason_regex_matches(match_string):
 @pytest.mark.parametrize("no_match_string", lock_reason_doesnt_match)
 def test_lock_reason_regex_doesnt_match(no_match_string):
     assert re.search(common_regexes.commentRegex, no_match_string) is None
+
+
+@pytest.mark.parametrize("match_string", former_staff_template_match)
+def test_former_staff_template_matches(match_string):
+    assert re.search(common_regexes.fsRegex, match_string) is not None
+
+
+@pytest.mark.parametrize("no_match_string", former_staff_template_doesnt_match)
+def test_former_staff_template_doesnt_match(no_match_string):
+    assert re.search(common_regexes.fsRegex, no_match_string) is None
 
 
 @pytest.mark.parametrize("match_string", category_match)

@@ -13,6 +13,19 @@ def do_cache(args, project) -> bool:
     return wmf_staff_accounts.main(args, project, True, True, "./cache")
 
 
+def get_args(category):
+    # Create a fake args object to pass to wmf_staff_accounts.main()
+    args = SimpleNamespace(
+        yes=True,
+        regen_cache=False,
+        dry=True,
+        diff=False,
+        cache_only=True,
+        category=category,
+    )
+    return args
+
+
 if __name__ == "__main__":
     projects = common_utils.get_projects()
     print(f"[mass_cache] Got {len(projects)} projects to cache...")
@@ -24,18 +37,10 @@ if __name__ == "__main__":
             print(f"[mass_cache] Skipping {project} due to missing data.\n\n")
             continue
 
-        # Create a fake args object to pass to wmf_staff_accounts.main()
-        args = SimpleNamespace(
-            yes=True,
-            regen_cache=False,
-            dry=True,
-            diff=False,
-            cache_only=True,
-            category=title,
-        )
         print(f"[mass_cache] Starting cache for {wiki_domain}...")
         try:
-            result = do_cache(args, wiki_domain)
+            print(get_args(title))
+            result = do_cache(get_args(title), wiki_domain)
         except Exception as e:
             print(f"[mass_cache] Error: {e}")
             print("[mass_cache] Continuing to next project...\n\n")
@@ -45,7 +50,7 @@ if __name__ == "__main__":
         else:
             # Try a manual login then try again
             manually_login(wiki_domain)
-            result = do_cache(args, wiki_domain)
+            result = do_cache(get_args(title), wiki_domain)
             if result:
                 print(f"[mass_cache] Done caching for {wiki_domain}.\n\n")
             else:
