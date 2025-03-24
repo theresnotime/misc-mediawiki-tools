@@ -6,11 +6,11 @@ import defaults
 import json
 import os
 import re
-import requests
+import requests  # type: ignore
 import sys
 import time
 from difflib import unified_diff
-from pwiki.wiki import Wiki
+from pwiki.wiki import Wiki  # type: ignore
 from termcolor import colored, cprint
 
 SW_VERSION = "1.1"
@@ -249,14 +249,16 @@ def main(args, wiki_domain: str, cache_only: bool, verbose: bool, cache_dir: str
             lock_event = get_lock_event(user)
             if lock_event is not False and "comment" in lock_event:
                 locked_accounts.append(user)
+                lock_timestamp = lock_event["timestamp"]
                 if check_lock_reason(lock_event["comment"]) is None:
                     cprint(
-                        f" - {user}: locked, but for another reason ({lock_event['comment']})",
+                        f" - {user}: locked {lock_timestamp}, but for another reason ({lock_event['comment']})",
                         "yellow",
                     )
                     continue
                 cprint(
-                    f" - {user}: locked, regex match ({lock_event['comment']})", "green"
+                    f" - {user}: locked {lock_timestamp}, regex match ({lock_event['comment']})",
+                    "green",
                 )
                 if cache_only:
                     if verbose:

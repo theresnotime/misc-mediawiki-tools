@@ -13,8 +13,10 @@ lock_reason_match = [
     "off boarding",
     "No longer employed at WMF",
     "No longer employed for us",
-    "No longer employed with WMF" "No longer with WMF",
+    "No longer employed with WMF",
+    "No longer with WMF",
     "WMF Contractor; Contract ended.",
+    "No Longer works with the Foundation",
 ]
 lock_reason_doesnt_match = [
     "Fox",
