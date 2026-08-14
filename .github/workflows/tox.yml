@@ -19,5 +19,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        cp config.py.example config.py
     - name: Run tox
       run: tox
