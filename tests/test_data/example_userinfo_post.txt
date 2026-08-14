@@ -1,0 +1,21 @@
+{{user info
+| former = true
+| full name = A Name
+| job title = A Job Title
+| organization = Wikimedia Foundation
+| short quote = I hope this works
+| about me =
+Line 1
+
+Line 2
+
+Line 3
+
+
+| about my work = Interesting
+| contact me =
+* E-mail:
+* IRC:
+* And More:
+}}
+

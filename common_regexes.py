@@ -2,10 +2,10 @@ import re
 
 userRegex = re.compile(r"\/.*")
 commentRegex = re.compile(
-    r"no longer (wokrs?|works?|employed)?.*?(WMF|Wikimedia|here|for (us|the)|at foundation)|laid(-| )?off|contract ended|off(-| )?board(ing)?",
+    r"no longer (wokrs?|works?|employed)?.*?(WMF|Wikimedia|here|for (us|the)|foundation)|laid(-| )?off|contract ended|off(-| )?board(ing)?",
     re.IGNORECASE,
 )
-fsRegex = re.compile(r"{{former( |_)staff}}\n", re.IGNORECASE)
+fsRegex = re.compile(r"{{former( |_)?staff}}\n", re.IGNORECASE)
 categoryRegex = re.compile(
     r"\[\[Category:Wikimedia( |_)Foundation( |_)staff\]\]", re.IGNORECASE
 )
